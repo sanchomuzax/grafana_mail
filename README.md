@@ -3,6 +3,7 @@
 * Send report with grafana pictures.
 * Require python module `requests`
 
+Parameters:
 ~~~
 -h HELP
 -f MAIL_FROM 
@@ -17,4 +18,6 @@
 
 Example of usage:
 
+~~~
 ./grafana_mail.py -m mail1@domain.test mail2@domain.test -f mailer@domain.net -M mailhost.domain.test -G http://localhost:3000 -P dashboard1,1 dashboard2,14 dashboard4,1 dashboard6,2
+~~~
