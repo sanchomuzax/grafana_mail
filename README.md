@@ -1,7 +1,7 @@
 # grafana_mail
 
 * Send report with grafana pictures.
-* Require python module 'requests'
+* Require python module `requests`
 
 ~~~
 -h HELP
