@@ -1,7 +1,7 @@
 # grafana_mail
 
 * Sending an e-mail report on yesterday's tables
-* Require python module `requests`
+* Required Python module: `requests`
 
 Parameters:
 ~~~
