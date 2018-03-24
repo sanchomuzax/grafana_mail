@@ -1,6 +1,6 @@
 # grafana_mail
 
-* Send report with grafana pictures.
+* Sending an e-mail report on yesterday's tables
 * Require python module `requests`
 
 Parameters:
