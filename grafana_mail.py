@@ -14,10 +14,11 @@ import socket
 import re
 import binascii
 
+
 def mail_type(s):
     if not re.match(r"[^@^\s]+@[^@^\s]+\.[^@\s]+", s):
          raise argparse.ArgumentTypeError('The mail is not a valid email')
-    return s       
+    return s
 
 def panel_type(s):
     try:
@@ -25,8 +26,8 @@ def panel_type(s):
         try:
             y = int(panelId)
         except ValueError:
-            print "PanelId must be an integer." 
-        return x, panelId            
+            print "PanelId must be an integer."
+        return x, panelId
     except:
          #raise argparse.ArgumentTypeError("Every panel must be <str>dashboard,<int>panelId")
          print "Render complete dashboard."
@@ -47,17 +48,17 @@ def parse_args():
                     required=True)
     parser.add_argument("-M", "--mailhost",
                     dest="mailhost", type=str,
-                    help="Mailhost hostname or IP or just in simple: localhost",
+                    help="Mailhost hostname or IP.",
                     required=True)
     parser.add_argument("-G", "--grafana_server",
                     dest="grafana_server",
-                    help="Grafana server & port, ex: http://grafana.test:3000 or http://localhost:3000",
+                    help="Grafana server & port, ex: http://grafana.test:3000",
                     required=True)
     parser.add_argument("-P", "--panel_list",
                     dest="panel_list",
                     nargs='+', type=panel_type,
                     help="Tuple of Grafana dashboard Id and panelId, every tuple has to be separated by a space, ex ('test', 1) ('dashboard2', 15) ...",
-                    required=True)   
+                    required=True)
     parser.add_argument("-T", "--api_token",
                     dest="api_token", type=str,
                     help="Grafana API Token to access the dashboard.",
@@ -70,7 +71,7 @@ def parse_args():
                     dest="img_height", type=str,
                     help="Height size of image.",
                     required=True)
-        return parser.parse_args()
+    return parser.parse_args()
 
 def last_day():
     midnight = datetime.combine(date.today(), time.min)
@@ -80,6 +81,7 @@ def last_day():
     midnight = int((midnight - epoch).total_seconds() * 1000.0)
     yesterday_mid = int((yesterday_mid - epoch).total_seconds() * 1000.0)
     return str(yesterday_mid), str(midnight)
+
 
 def download(panelId, begin_date, end_date, grafana_server, api_token, img_width, img_height):
     if panelId[1] == None:
@@ -106,9 +108,10 @@ def download(panelId, begin_date, end_date, grafana_server, api_token, img_width
             shutil.copyfileobj(r.raw, picture)
     del r
 
+    
 def prepare():
     msgRoot = MIMEMultipart('related')
-    msgRoot['Subject'] = 'Grafana Reports.'
+    msgRoot['Subject'] = 'Sky riport'
     msgRoot['From'] = '<' + strFrom + '>'
     msgRoot['Date'] = formatdate()
     msgRoot['Message-ID'] = '<' + binascii.b2a_hex(os.urandom(15)) + '@' + strFrom + '>'
@@ -116,12 +119,14 @@ def prepare():
     msgRoot.preamble = 'This is a multi-part message in MIME format.'
     return msgRoot
 
+
 def send(msgRoot, strTo, mailhost):
     msgRoot['To'] = '<' + strTo + '>'
     smtp = smtplib.SMTP()
     smtp.connect(mailhost)
     smtp.sendmail(strFrom, strTo, msgRoot.as_string())
     smtp.quit()
+
 
 def attach_img(msgRoot, panelId, dashboard):
     global msgStr
@@ -138,13 +143,14 @@ def attach_img(msgRoot, panelId, dashboard):
     msgImage.add_header('Content-Disposition', 'attachment;filename="' + img_name + '.png"')
     msgRoot.attach(msgImage)
 
+
 if __name__ == '__main__':
     args = parse_args()
     if args.mail_from:
         strFrom = args.mail_from
     else:
         strFrom = socket.getfqdn()
-     
+
     for panelId in args.panel_list:
         download(panelId, last_day()[0], last_day()[1], args.grafana_server, args.api_token, args.img_width, args.img_height)
     msgRoot = prepare()
@@ -152,7 +158,7 @@ if __name__ == '__main__':
     msgStr = """
 Hi,
 
-This is Grafana Mail.
+This is a Grafana daily riport from yesterday.
 
 """
     msgAlternative = MIMEMultipart('alternative')
@@ -171,7 +177,7 @@ This is Grafana Mail.
 
     for panelId in args.panel_list:
         attach_img(msgRoot, panelId[1], panelId[0])
-    
+
     for mail in args.mail_list:
         send(msgRoot, mail, args.mailhost)
 
@@ -181,4 +187,3 @@ This is Grafana Mail.
         else:
             img_name = 'img_' + panelId[0] + '-' + panelId[1]
         os.remove('./' + img_name + '.png')
-
