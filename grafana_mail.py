@@ -14,7 +14,6 @@ import socket
 import re
 import binascii
 
-
 def mail_type(s):
     if not re.match(r"[^@^\s]+@[^@^\s]+\.[^@\s]+", s):
          raise argparse.ArgumentTypeError('The mail is not a valid email')
@@ -57,7 +56,7 @@ def parse_args():
     parser.add_argument("-P", "--panel_list",
                     dest="panel_list",
                     nargs='+', type=panel_type,
-                    help="Tuple of Grafana dashboard Id and panelId, every tuple has to be separated by a space, ex ('test', 1) ('dashboard2', 15) ...",
+                    help="Tuple of Grafana dashboard Id and panelId, every tuple has to be separated by a space, ex test,1 dashboard2,15 ...",
                     required=True)
     parser.add_argument("-T", "--api_token",
                     dest="api_token", type=str,
@@ -71,17 +70,20 @@ def parse_args():
                     dest="img_height", type=str,
                     help="Height size of image.",
                     required=True)
+    parser.add_argument("-p", "--period",
+                    dest="period", type=str,
+                    help="The requested time in days, ex 1 or 30.",
+                    required=True)
     return parser.parse_args()
 
 def last_day():
     midnight = datetime.combine(date.today(), time.min)
-    yesterday_mid = midnight - timedelta(days=1)
+    yesterday_mid = midnight - timedelta(days = int(args.period))
     epoch = datetime.utcfromtimestamp(0)
     midnight = midnight - timedelta(seconds=1)
     midnight = int((midnight - epoch).total_seconds() * 1000.0)
     yesterday_mid = int((yesterday_mid - epoch).total_seconds() * 1000.0)
     return str(yesterday_mid), str(midnight)
-
 
 def download(panelId, begin_date, end_date, grafana_server, api_token, img_width, img_height):
     if panelId[1] == None:
@@ -108,7 +110,6 @@ def download(panelId, begin_date, end_date, grafana_server, api_token, img_width
             shutil.copyfileobj(r.raw, picture)
     del r
 
-    
 def prepare():
     msgRoot = MIMEMultipart('related')
     msgRoot['Subject'] = 'Sky riport'
@@ -119,14 +120,12 @@ def prepare():
     msgRoot.preamble = 'This is a multi-part message in MIME format.'
     return msgRoot
 
-
 def send(msgRoot, strTo, mailhost):
     msgRoot['To'] = '<' + strTo + '>'
     smtp = smtplib.SMTP()
     smtp.connect(mailhost)
     smtp.sendmail(strFrom, strTo, msgRoot.as_string())
     smtp.quit()
-
 
 def attach_img(msgRoot, panelId, dashboard):
     global msgStr
@@ -143,7 +142,6 @@ def attach_img(msgRoot, panelId, dashboard):
     msgImage.add_header('Content-Disposition', 'attachment;filename="' + img_name + '.png"')
     msgRoot.attach(msgImage)
 
-
 if __name__ == '__main__':
     args = parse_args()
     if args.mail_from:
@@ -158,7 +156,7 @@ if __name__ == '__main__':
     msgStr = """
 Hi,
 
-This is a Grafana daily riport from yesterday.
+This is a Grafana daily report about """ + args.period + """ day(s).
 
 """
     msgAlternative = MIMEMultipart('alternative')
