@@ -112,7 +112,7 @@ def download(panelId, begin_date, end_date, grafana_server, api_token, img_width
 
 def prepare():
     msgRoot = MIMEMultipart('related')
-    msgRoot['Subject'] = 'Sky riport'
+    msgRoot['Subject'] = 'Grafana report'
     msgRoot['From'] = '<' + strFrom + '>'
     msgRoot['Date'] = formatdate()
     msgRoot['Message-ID'] = '<' + binascii.b2a_hex(os.urandom(15)) + '@' + strFrom + '>'
